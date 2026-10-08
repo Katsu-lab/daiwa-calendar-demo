@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ガント スマホ版 パターン2 Mock</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif; background: #f0efe9; color: #1f2430; }
+  .mock-shell { max-width: 1400px; margin: 0 auto; padding: 24px 16px; }
+  .mock-title { font-size: 20px; font-weight: 700; }
+  .en { display: block; font-size: 11.5px; font-weight: 400; color: #9AA2B1; margin-top: 2px; }
+  .mock-sub { font-size: 12.5px; color: #767b87; margin: 6px 0 14px; }
+  .mock-sub .en { font-size: 11px; }
+  .tabs { display: flex; gap: 4px; margin: 0 0 20px; border-bottom: 1px solid #e2e0d9; flex-wrap: wrap; }
+  .tab-btn { padding: 10px 14px; font-size: 13.5px; font-weight: 600; color: #8a8f9c; background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; text-align: left; font-family: inherit; }
+  .tab-btn .en { font-size: 10.5px; color: #b4b9c4; }
+  .tab-btn.active { color: #1f2430; border-bottom-color: #2b3350; }
+  .stage { display: flex; gap: 26px; align-items: flex-start; flex-wrap: wrap; }
+  .notes { flex: 1; min-width: 320px; }
+
+  /* phone */
+  .phone { user-select: none; -webkit-user-select: none; width: 393px; height: 800px; background: #fff; border: 10px solid #1f2430; border-radius: 40px; overflow: hidden; position: relative; flex: none; box-shadow: 0 10px 30px rgba(31,36,48,.18); }
+  .p-top { height: 54px; background: #fff; border-bottom: 1px solid #eef0f4; display: flex; align-items: center; padding: 0 12px 0 8px; gap: 6px; }
+  .p-top .m { width: 36px; font-size: 18px; text-align: center; }
+  .p-title { flex: 1; font-size: 15px; font-weight: 700; }
+  .furi { border: 1px solid #d8dbe2; border-radius: 6px; padding: 5px 8px; font-size: 11px; }
+  .p-body { position: absolute; top: 54px; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column; background: #fff; }
+  .p-head { padding: 12px 14px 10px; border-bottom: 1px solid #eef0f4; flex: none; }
+  .p-head h1 { margin: 0; font-size: 17px; }
+  .p-head p { margin: 3px 0 0; font-size: 11.5px; color: #767b87; }
+  .p-head .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .btn-p { background: #1f2a44; color: #fff; border: none; border-radius: 8px; padding: 0 12px; height: 36px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .btn-o { background: #fff; color: #2b3350; border: 1px solid #d8dbe2; border-radius: 8px; padding: 0 12px; height: 36px; font-size: 12.5px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .vseg { display: flex; background: #eceae4; border-radius: 8px; padding: 2px; flex: none; }
+  .vseg button { border: none; background: none; height: 30px; min-width: 40px; padding: 0 8px; font-size: 12px; border-radius: 6px; color: #5d6472; cursor: pointer; font-family: inherit; }
+  .vseg button.on { background: #fff; color: #1f2430; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .today-btn { height: 30px; font-size: 11.5px; padding: 0 10px; }
+
+  /* gantt */
+  .gwrap { flex: 1; overflow: auto; position: relative; -webkit-overflow-scrolling: touch; }
+  .ginner { position: relative; }
+  .colbg { position: absolute; top: 0; bottom: 0; left: 0; display: flex; pointer-events: none; }
+  .colbg span { flex: none; border-right: 1px solid #eceef2; height: 100%; }
+  .colbg span.we { background: #fafafa; }
+  .colbg span.td { background: #fff4f4; }
+  .colbg span.mb { border-left: 2px solid #c9ced8; }
+  .ghead { position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid #dfe2e8; }
+  .gmonth { height: 22px; display: flex; font-size: 10.5px; color: #9aa2b1; }
+  .gmonth > div { flex: none; }
+  .gmonth > div + div { border-left: 2px solid #c9ced8; }
+  .gmonth span { position: sticky; left: 0; display: inline-block; padding: 5px 6px 0; white-space: nowrap; background: #fff; }
+  .gmonth span.stick { position: sticky; left: 0; background: #fff; padding-right: 6px; }
+  .gdays { display: flex; }
+  .gdays div { flex: none; text-align: center; font-size: 12px; line-height: 1.25; padding: 3px 0 5px; color: #3a4050; border-right: 1px solid #eceef2; }
+  .gdays div small { display: block; font-size: 10.5px; }
+  .gdays div.sat small { color: #2f6fed; } .gdays div.sun small { color: #d1414a; }
+  .gdays div.td { background: #d1414a; color: #fff; font-weight: 700; border-radius: 0; }
+  .gdays div.td small { color: #fff; }
+  .gdays div.mb { border-left: 2px solid #c9ced8; }
+  .ggroup { position: relative; z-index: 2; }
+  .gtitle { height: 38px; background: #fff; border-top: 1px solid #dfe2e8; border-bottom: 1px solid #dfe2e8; position: relative; z-index: 5; }
+  .gt { position: sticky; left: 0; height: 100%; display: flex; align-items: center; gap: 6px; padding: 0 10px 0 12px; background: #fff; }
+  .gt b { font-size: 13px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gt .pct { font-size: 10.5px; font-weight: 700; color: #1f9d6b; border: 1px solid #1f9d6b; border-radius: 3px; padding: 0 4px; line-height: 16px; }
+  .gt .cnt { font-size: 10.5px; color: #5d6472; border: 1px solid #c9ced8; border-radius: 3px; padding: 0 5px; line-height: 16px; }
+  .pa { display: flex; }
+  .pa button { min-width: 44px; padding: 0 8px !important; border-radius: 4px; height: 24px; border: 1px solid #2f6fed; background: #fff; font-size: 10.5px; color: #2f6fed; font-weight: 700; cursor: pointer; padding: 0; font-family: inherit; }
+  .pa button + button { border-left: none; }
+  .pa button.on { background: #2f6fed; color: #fff; border-color: #2f6fed; }
+  .caret { width: 30px; height: 30px; border: none; background: none; font-size: 12px; cursor: pointer; color: #3a4050; }
+  .grow { height: 44px; position: relative; border-bottom: 1px solid #f1f2f5; }
+  /* 工程表（①②）：作業名＋進捗をバーの上、予定バー（グレー）、その下に実績の線 */
+  .grow.task { height: 62px; }
+  .grow.lab { height: 52px; }
+  .grow.task .bar, .grow.lab .bar { top: 28px; height: 16px; border-radius: 3px; }
+  .grow.task .act { top: 47px; height: 6px; border-radius: 2px; }
+  .tlb { position: absolute; top: 5px; right: 0; height: 20px; pointer-events: none; }
+  .tlb > span { position: sticky; left: 4px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #1f2430; white-space: nowrap; background: rgba(255,255,255,.85); padding-right: 4px; }
+  .tlb .tp { font-size: 10.5px; font-weight: 700; color: #1f9d6b; border: 1px solid #1f9d6b; border-radius: 3px; padding: 0 4px; line-height: 16px; background: #fff; }
+  .tlb .tp.ip { color: #2f6fed; border-color: #2f6fed; }
+  .bar { position: absolute; top: 9px; height: 26px; border-radius: 4px; background: #dcdcdc; color: #2b3350; font-size: 12px; display: flex; align-items: center; cursor: pointer; white-space: nowrap; border: 1px solid transparent; clip-path: inset(-3px round 5px); }
+  .bar .lb { position: sticky; left: 0; padding: 0 8px; }
+  .bar.actual { background: #bcd3fb; }
+  .olb { position: absolute; top: 14px; font-size: 11.5px; color: #3a4050; white-space: nowrap; pointer-events: none; }
+  .act { position: absolute; top: 28px; height: 5px; background: #2f6fed; border-radius: 3px; pointer-events: none; z-index: 2; }
+  .act.over { background: #d1414a; }
+  .draw .act { top: 30px; height: 8px; }
+  .grow.draw { cursor: pointer; }
+  .grow.tapable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .grow.tapable:active, .grow.tapable.pressed { background: rgba(47,111,237,.08); }
+  .grow.tapable.cur { background: rgba(47,111,237,.06); }
+  .grow.draw .bar { pointer-events: none; }
+  .fut { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(45deg, transparent 0 4px, rgba(150,158,172,.14) 4px 8px); pointer-events: none; }
+  .pdot { position: absolute; top: 29px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #2f6fed; box-shadow: 0 0 0 4px rgba(47,111,237,.25); z-index: 3; pointer-events: none; }
+  .pbub { position: absolute; top: 25px; background: #1f2a44; color: #fff; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 6px; white-space: nowrap; z-index: 4; pointer-events: none; }
+  .pday { position: absolute; top: 0; bottom: 0; background: rgba(47,111,237,.12); pointer-events: none; }
+  .dp .ok { color: #1f9d6b; font-weight: 700; font-size: 11.5px; margin-left: 2px; }
+  .bar.sel { border-color: #1f2a44; box-shadow: 0 0 0 2px #1f2a44; }
+  .bar.col { color: #fff; font-weight: 600; }
+  .gnow { position: absolute; top: 0; bottom: 0; width: 2px; background: #d1414a; z-index: 1; pointer-events: none; }
+  .collapsed-note { height: 8px; }
+
+  /* editor panel */
+  .dp.editing { padding-bottom: 12px; }
+  .ed { display: grid; grid-template-columns: 40px 1fr; row-gap: 4px; margin: 2px 0 8px; }
+  .ed-lbl { font-size: 11px; font-weight: 700; color: #3a4050; display: flex; align-items: center; line-height: 1.2; }
+  .ed-ticks { position: relative; height: 26px; }
+  .ed-ticks span { position: absolute; top: 0; font-size: 10px; color: #767b87; line-height: 1.15; white-space: nowrap; }
+  .ed-ticks span small { font-size: 9px; }
+  .ed-ticks span.td { color: #d1414a; font-weight: 700; }
+  .ed-track { position: relative; height: 40px; background: #f6f8fd; border-radius: 6px; }
+  .ed-grid span { position: absolute; top: 0; bottom: 0; border-right: 1px solid #e6e9f0; }
+  .ed-grid span.we { background: #eef1f7; }
+  .ed-now { position: absolute; top: 0; bottom: 0; width: 2px; background: #d1414a; }
+  .el-bar { position: absolute; top: 10px; height: 20px; border-radius: 4px; }
+  .el-bar.p { background: #b8bec9; } .el-bar.a { background: #2f6fed; } .el-bar.a.open { background: repeating-linear-gradient(90deg, #2f6fed 0 8px, #8fb1f5 8px 12px); }
+  .el-bar.lock { opacity: .55; }
+  .hdl { position: absolute; top: -2px; width: 44px; height: 44px; margin-left: -22px; display: flex; align-items: center; justify-content: center; touch-action: none; cursor: ew-resize; z-index: 4; }
+  .hdl i { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 3px solid #1f2a44; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  .hdl.a i { border-color: #2f6fed; }
+  .hdl.drag i { transform: scale(1.25); }
+  .bub { position: absolute; top: -24px; background: #1f2a44; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 6px; white-space: nowrap; display: none; pointer-events: none; }
+  .hdl.drag .bub { display: block; }
+  .hdl[data-k="ps"] .bub, .hdl[data-k="as"] .bub { left: 22px; }
+  .hdl[data-k="pe"] .bub, .hdl[data-k="ae"] .bub { right: 22px; }
+  .el-none { position: absolute; top: 12px; left: 8px; font-size: 11.5px; color: #9aa2b1; }
+  .el-dates { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .el-dates button { border: 1px solid #d8dbe2; background: #fff; border-radius: 16px; font-size: 11.5px; padding: 5px 10px; cursor: pointer; font-family: inherit; color: #2b3350; }
+  .el-dates button b { color: #767b87; font-weight: 700; margin-right: 4px; }
+  .el-btns { display: flex; gap: 6px; }
+  .el-btns button { height: 36px; font-size: 12px; padding: 0 10px; }
+  .lock-note { font-size: 10.5px; color: #9aa2b1; margin: 0 0 6px; }
+
+  /* popover (②) */
+  #popbd { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: rgba(15,20,30,.28); z-index: 30; display: none; }
+  #pop { position: absolute; left: 8px; right: 8px; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(15,20,30,.28); z-index: 31; padding: 12px 12px 12px; display: none; }
+  #pop.show, #popbd.show { display: block; }
+  #pop .ph { display: flex; align-items: center; gap: 8px; }
+  #pop .ph .crumb { font-size: 11px; color: #767b87; }
+  #pop .ph b { font-size: 15px; }
+  #pop .ph .pct { font-size: 10.5px; font-weight: 700; border: 1px solid #2f6fed; color: #2f6fed; border-radius: 3px; padding: 0 4px; }
+  #pop .ph .x { margin-left: auto; width: 32px; height: 32px; border: none; background: none; font-size: 15px; color: #767b87; cursor: pointer; }
+  #pop .ed { grid-template-columns: 36px 1fr 32px; margin: 8px 0 6px; align-items: center; }
+  .lane-del { width: 26px; height: 26px; margin-left: 6px; border-radius: 50%; border: 1.5px solid #e5484d; background: #fff; color: #e5484d; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; position: relative; }
+  .lane-del::after { content: ''; position: absolute; top: -9px; left: -9px; width: 44px; height: 44px; }
+  .pp-edge { position: absolute; top: 0; bottom: 0; width: 18px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; background: rgba(47,111,237,.75); pointer-events: none; z-index: 6; }
+  .pp-edge.r { right: 0; border-radius: 0 6px 6px 0; } .pp-edge.l { left: 0; border-radius: 6px 0 0 6px; }
+  .lane-del:active { background: #e5484d; color: #fff; }
+  #pop .ed-track.tap { cursor: pointer; }
+  .futz { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(45deg, transparent 0 4px, rgba(150,158,172,.2) 4px 8px); border-radius: 0 6px 6px 0; pointer-events: none; }
+  .pp-dot { position: absolute; top: 14px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #2f6fed; box-shadow: 0 0 0 4px rgba(47,111,237,.25); pointer-events: none; }
+  .pp-cell { position: absolute; top: 0; bottom: 0; background: rgba(47,111,237,.14); pointer-events: none; }
+  .pp-msg { font-size: 11.5px; color: #4a4f5b; min-height: 18px; margin-bottom: 8px; }
+  .pp-msg b { color: #2f6fed; }
+  .pp-msg .err { color: #d1414a; }
+  .pp-sum { display: flex; gap: 12px; font-size: 11.5px; color: #4a4f5b; margin-bottom: 8px; flex-wrap: wrap; }
+  .pp-sum span b { color: #767b87; margin-right: 4px; }
+  .el-bar { cursor: pointer; }
+  .el-bar.selb { box-shadow: 0 0 0 2px #1f2a44; }
+  .pp-del { position: absolute; top: -13px; width: 22px; height: 22px; border-radius: 50%; background: #e5484d; color: #fff; border: 2px solid #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 8; box-shadow: 0 1px 4px rgba(0,0,0,.3); padding: 0; }
+  .pp-del::after { content: ''; position: absolute; top: -11px; left: -11px; width: 44px; height: 44px; }
+  .pp-clr { margin-left: auto; border: 1px solid #f3c9cc; background: #fff; color: #d1414a; border-radius: 14px; font-size: 11px; padding: 3px 10px; cursor: pointer; font-family: inherit; }
+  .pp-btns { display: flex; gap: 8px; }
+  .pp-btns button { flex: 1; height: 38px; }
+
+  /* month calendar (⑤) */
+  .mc { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: 10px 8px; }
+  .mc-head { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 6px; }
+  .mc-head b { font-size: 14px; }
+  .mc-g { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .mc-g .h { font-size: 11px; color: #767b87; text-align: center; padding: 4px 0; }
+  .mc-g .h.sun, .mc-d .sun { color: #d1414a; } .mc-g .h.sat, .mc-d .sat { color: #2f6fed; }
+  .mc-d { height: 52px; border-radius: 8px; text-align: center; padding-top: 5px; cursor: pointer; font-size: 13px; }
+  .mc-d.out { color: #c3c8d1; cursor: default; }
+  .mc-d.sel { background: #1f2a44; color: #fff; font-weight: 700; }
+  .mc-d.today:not(.sel) { box-shadow: 0 0 0 1.5px #1f2a44 inset; }
+  .mc-dots { display: flex; justify-content: center; gap: 2px; margin-top: 4px; }
+  .mc-dots i { width: 6px; height: 6px; border-radius: 50%; }
+  .mc-n { font-size: 9.5px; color: #767b87; margin-top: 1px; }
+  .mc-d.sel .mc-n { color: #cfd6e2; }
+  .i-full { background: #1f9d6b; } .i-half { background: #e0a83c; }
+  .badge2 { font-size: 10.5px; font-weight: 700; border-radius: 10px; padding: 2px 8px; }
+  .badge2.bg { background: #e8f6ee; color: #1f9d6b; } .badge2.by { background: #fff6d6; color: #a07400; }
+
+  /* detail panel */
+  .dp { flex: none; border-top: 1px solid #dfe2e8; box-shadow: 0 -6px 14px rgba(31,36,48,.08); background: #fff; padding: 12px 16px 16px; position: relative; }
+  .dp .crumb { font-size: 11.5px; color: #767b87; }
+  .dp .tt { display: flex; align-items: center; gap: 8px; margin: 3px 0 8px; }
+  .dp .tt b { font-size: 17px; }
+  .dp .pct { font-size: 11px; font-weight: 700; color: #1f9d6b; border: 1px solid #1f9d6b; border-radius: 3px; padding: 0 5px; }
+  .dp table { font-size: 12.5px; border-collapse: collapse; }
+  .dp td { padding: 3px 0; vertical-align: top; }
+  .dp td:first-child { font-weight: 700; width: 46px; font-size: 11.5px; }
+  .dp .x { position: absolute; top: 6px; right: 6px; width: 36px; height: 36px; border: none; background: none; font-size: 15px; cursor: pointer; color: #767b87; }
+  .dp .acts { display: flex; gap: 8px; margin-top: 10px; }
+  .dp .acts button { flex: 1; height: 40px; }
+  .dp.empty { color: #9aa2b1; font-size: 12.5px; text-align: center; padding: 16px; }
+  .legend { display: flex; gap: 10px; font-size: 10.5px; color: #767b87; margin-top: 8px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 3px; }
+
+  /* sheet */
+  .backdrop { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,20,30,.45); z-index: 40; display: none; }
+  .backdrop.show { display: block; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 80%; background: #fff; border-radius: 18px 18px 0 0; z-index: 41; transform: translateY(105%); transition: transform .22s; padding: 8px 18px 18px; }
+  .sheet.show { transform: translateY(0); }
+  .sheet h3 { margin: 12px 0 12px; font-size: 16px; }
+  .sheet { overflow-y: auto; }
+  .sec-t { font-size: 13px; font-weight: 700; color: #1f2430; margin: 4px 0 8px; padding-top: 10px; border-top: 1px solid #eef0f4; }
+  .lnk { margin-left: auto; border: none; background: none; color: #d1414a; font-size: 12px; font-family: inherit; cursor: pointer; padding: 4px 0; }
+  .quick { display: flex; gap: 8px; margin-bottom: 10px; } .quick button { flex: 1; height: 38px; }
+  .prog-auto { display: flex; align-items: baseline; gap: 10px; background: #f6f8fd; border-radius: 8px; padding: 10px 12px; }
+  .prog-auto b { font-size: 20px; color: #1f2430; } .prog-auto span { font-size: 12px; color: #767b87; }
+  .auto-tag { margin-left: auto; font-size: 10.5px !important; border: 1px solid #c9ced8; border-radius: 3px; padding: 0 5px; color: #767b87; }
+  .hint { font-size: 11px; color: #767b87; margin-top: 4px; }
+  .t-err { color: #d1414a; font-size: 12px; min-height: 16px; margin: -4px 0 8px; }
+  .fld { margin-bottom: 12px; }
+  .fld label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 5px; color: #3a4050; }
+  .inp { width: 100%; height: 44px; border: 1px solid #d8dbe2; border-radius: 8px; padding: 0 12px; font-size: 14px; font-family: inherit; background: #fff; }
+
+  /* notes */
+  .notes h3 { margin: 0 0 4px; font-size: 16px; }
+  .notes h3 .en { font-size: 11.5px; }
+  .notes .lead { font-size: 12.5px; color: #5d6472; margin: 8px 0 12px; line-height: 1.6; }
+  .notes .lead .en { font-size: 11px; }
+  .change-note { background: #fff4f4; border: 1px solid #f3c9cc; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: #8a2a2f; margin-bottom: 8px; line-height: 1.55; }
+  .change-note .en { font-size: 11px; color: #b06a6d; }
+  .note-num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #d1414a; color: #fff; font-size: 10.5px; font-weight: 700; margin-right: 6px; vertical-align: 1px; }
+  .info-note { background: #fff; border: 1px solid #e6e4dd; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: #4a4f5b; margin-bottom: 8px; line-height: 1.55; }
+  .info-note .en { font-size: 11px; }
+  .common { background: #fff; border: 1px solid #e6e4dd; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; }
+  .common h4 { margin: 0 0 6px; font-size: 13px; }
+  .common h4 .en { font-size: 11px; }
+  .common ul { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.75; }
+  .common li .en { display: inline; font-size: 10.5px; margin-left: 4px; }
+  code.k { background: #f2f2ee; border: 1px solid #e6e4dd; border-radius: 4px; padding: 1px 5px; font-size: 11.5px; }
+</style>
+</head>
+<body>
+<div class="mock-shell">
+  <div class="mock-title">カレンダー・ガント画面 スマホ版：パターン2（①〜④）＋休暇・欠勤カレンダー（⑤）<span class="en">Calendar / gantt screens on mobile — Pattern 2 (① to ④) + leave calendar (⑤)</span></div>
+  <p class="mock-sub">添付のパターン2（カレンダー形式を継続・グループ見出しを各ガントの上・タスク名はバー内・横スクロールで見出し固定・タップで詳細）を①〜④に当てはめました。⑤の休暇・欠勤カレンダーは月カレンダーのまま見やすくしています。バーや日付を押すと下に詳細が出ます。
+    <span class="en">Pattern 2 from the attachment (keep the calendar, group title above each gantt, task name inside the bar, horizontal scroll with fixed titles, tap for details) applied to ① to ④; ⑤ keeps the month calendar, made readable. Tap a bar or date for details below.</span></p>
+  <div class="tabs" id="tabs"></div>
+  <div class="stage">
+    <div class="phone" id="phone">
+      <div class="p-top"><span class="m">☰</span><span class="p-title" id="pTitle"></span><span class="furi">ふりがな</span></div>
+      <div class="p-body">
+        <div class="p-head" id="pHead"></div>
+        <div class="gwrap" id="gw"></div>
+        <div class="dp" id="dp"></div>
+      </div>
+      <div class="backdrop" id="bd" onclick="closeSheet()"></div>
+      <div class="sheet" id="sheet"></div>
+    </div>
+    <div class="notes" id="notes"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const TODAY = 30; // 2026/09/30（水）
+let D0 = 21, D1 = 61, CW = 34; // 表示範囲（日の通し番号：1＝2026/09/01）と1日の幅
+const MONTHS = [[9, 1, 30], [10, 31, 61], [11, 62, 91], [12, 92, 122]]; // [月, 開始, 終了]
+const ym = n => { for (const [m, a, b] of MONTHS) if (n >= a && n <= b) return [m, n - a + 1]; return n < 1 ? [8, 31 + n] : [12, n - 91]; };
+const md = n => { const [m, d] = ym(n); return `${m}/${d}`; };
+const dd = n => md(n).split('/')[1];
+const WD = ['日','月','火','水','木','金','土'];
+const wd = n => WD[(2 + n - 1) % 7];
+const full = n => { const [m, d] = ym(n); return `2026/${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}（${wd(n)}）`; };
+const X = d => (d - D0) * CW;
+const VIEWS = { week: { l: '週', d0: 21, d1: 61, days: 7 }, month: { l: '月', d0: 1, d1: 91, days: 31 }, all: { l: '全体', d0: 1, d1: 111, days: 111 } }; // 工期 9/1〜12/20
+let VIEW = 'week';
+function setScale() {
+  if (cur === 'koutei') { const v = VIEWS[VIEW], w = ($('gw') && $('gw').clientWidth) || 373; D0 = v.d0; D1 = v.d1; CW = w / v.days; }
+  else { D0 = 21; D1 = 61; CW = 34; }
+}
+const SITES = { 'BORITH 現場': '#3b82f6', 'スクラッチ現場B': '#e8479a', '田中 太郎GENBA': '#10b981', '本社': '#64748b' };
+const N = (n, ja, en) => `<div class="change-note"><span class="note-num">${n}</span>${ja}<span class="en">${en}</span></div>`;
+const I = (ja, en) => `<div class="info-note">${ja}<span class="en">${en}</span></div>`;
+
+/* ---------- data per screen ---------- */
+// task: { n, ps, pe, as, ae, pct }
+const T = (n, ps, pe, as, ae, pct) => ({ n, ps, pe, as, ae, pct });
+const DATA = {
+  home: { title: 'ホーム', head: () => `<h1>所属現場の工程表</h1><p>あなたが所属している 2 現場</p>`,
+    kind: 'task',
+    groups: [
+      { n: 'BORITH 現場', rows: [T('造園', 14, 40, 14, null, 97), T('Task 6', 14, 28, 15, null, 90), T('Task7', 21, 33, 22, null, 85), T('task3', 28, 45, 29, null, 25), T('...', 31, 50, 32, null, 29), T('Task5', 35, 55, null, null, 0)] },
+      { n: 'スクラッチ現場B', rows: [T('基礎工事', 10, 24, 10, 24, 100), T('鉄骨建方', 25, 42, 26, null, 40)] },
+    ] },
+  koutei: { title: '現場詳細', head: () => `<div class="row"><div><h1>BORITH 現場 ／ 工程表</h1><p>S256・工期 9/1〜12/20・進捗 62%</p></div><div class="vseg">${Object.entries(VIEWS).reverse().map(([k, v]) => `<button class="${VIEW === k ? 'on' : ''}" onclick="VIEW='${k}';render()">${v.l}</button>`).join('')}</div></div>`,
+    kind: 'task',
+    groups: [
+      { n: '造園', rows: [T('Task 6', 14, 28, 15, null, 90), T('Task7', 21, 33, 22, null, 85), T('Task9', 14, 25, 14, 25, 100), T('task 10', 16, 26, 16, 27, 100)] },
+      { n: '外構・その他', rows: [T('task3', 28, 45, 29, null, 25), T('...', 31, 50, 32, null, 29), T('Task5', 35, 55, null, null, 0)] },
+    ] },
+  assign: { title: '配属現場一覧', head: () => `<div class="row"><div><h1>勤務予定</h1><p>当月の勤務予定・締切 毎月10日</p></div><button class="btn-p" onclick="openSheet('asg')">＋ 追加</button></div>`,
+    kind: 'person',
+    groups: [
+      { n: 'BORITH 現場', rows: [{ n: 'Borith 現場監督', s: 1, e: 30 }, { n: 'Meas', s: 20, e: 35 }] },
+      { n: 'スクラッチ現場B', rows: [{ n: 'Borith 現場監督', s: 31, e: 45 }, { n: '田中 太郎', s: 25, e: 40 }] },
+      { n: '田中 太郎GENBA', rows: [{ n: 'General Employee', s: 28, e: 31 }] },
+      { n: '本社', rows: [{ n: 'Admin Employee', s: 1, e: 60 }, { n: 'General Employee', s: 32, e: 34 }] },
+    ] },
+  res: { title: '重機・点検一覧', head: () => `<div class="row"><div><h1>重機・点検一覧</h1><p>予約状況</p></div><button class="btn-p" onclick="openSheet('res')">＋ 予約</button></div>`,
+    kind: 'res',
+    groups: [
+      { n: '重機', rows: [{ n: 'スクラッチ現場B', r: [['スクラッチ現場B', 6, 40, 'Borith 現場監督']] }, { n: 'AAA', r: [['BORITH 現場', 19, 26, 'Meas'], ['BORITH 現場', 31, 45, 'Borith 現場監督']] }, { n: 'バックホー', r: [] }] },
+      { n: '車両', rows: [{ n: 'Tool2', r: [['田中 太郎GENBA', 30, 33, '田中 太郎']] }, { n: 'Cart', r: [['スクラッチ現場B', 20, 29, 'Sopheap']] }] },
+    ] },
+};
+DATA.cal = { title: '出退勤一覧', kind: 'cal', head: () => `<div class="row"><div><h1>休暇・欠勤カレンダー</h1><p>全社員の休暇・欠勤の予定</p></div></div>` };
+const LEAVE = { 2: [['全', '山田 太郎']], 10: [['午前', 'Meas']], 18: [['全', '管理者アカウント']], 21: [['全', '田中 太郎'], ['午後', 'Sopheap']], 28: [['全', 'BORITH USER'], ['全', 'Sopheap'], ['午前', 'Meas']], 29: [['全', 'BORITH USER']] };
+let CALDAY = TODAY;
+function calHTML() {
+  let g = WD.map((w, i) => `<div class="h ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${w}</div>`).join('') + '<div class="mc-d out">30</div><div class="mc-d out">31</div>';
+  for (let d = 1; d <= 30; d++) {
+    const L = LEAVE[d] || [], w = wd(d);
+    g += `<div class="mc-d ${d === CALDAY ? 'sel' : ''} ${d === TODAY ? 'today' : ''}" onclick="CALDAY=${d};render(true)"><span class="${d === CALDAY ? '' : w === '日' ? 'sun' : w === '土' ? 'sat' : ''}">${d}</span>
+      ${L.length ? `<div class="mc-dots">${L.slice(0, 3).map(l => `<i class="${l[0] === '全' ? 'i-full' : 'i-half'}"></i>`).join('')}</div><div class="mc-n">${L.length}名</div>` : ''}</div>`;
+  }
+  g += '<div class="mc-d out">1</div><div class="mc-d out">2</div><div class="mc-d out">3</div>';
+  return `<div style="padding:10px 12px 14px"><div class="mc"><div class="mc-head"><button class="btn-o" style="width:40px;padding:0">‹</button><b>2026年 9月 ▾</b><button class="btn-o" style="width:40px;padding:0">›</button></div><div class="mc-g">${g}</div>
+    <div class="legend" style="margin:8px 6px 0"><span><i class="i-full" style="width:8px;height:8px;border-radius:50%"></i>全休</span><span><i class="i-half" style="width:8px;height:8px;border-radius:50%"></i>半休（午前・午後）</span></div></div></div>`;
+}
+function calDetail() {
+  const L = LEAVE[CALDAY] || [];
+  return { cls: 'dp', h: `<div class="row" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><b style="font-size:14px">${md(CALDAY)}（${wd(CALDAY)}）　${L.length}名</b><button class="btn-o" style="height:34px" onclick="openSheet('leave')">＋ この日に登録</button></div>
+    <div style="max-height:150px;overflow-y:auto">${L.length ? L.map(l => `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-bottom:1px solid #f1f2f5;font-size:13.5px"><span>${l[1]}</span><span class="badge2 ${l[0] === '全' ? 'bg' : 'by'}">${l[0] === '全' ? '全休' : l[0] + '半休'}</span></div>`).join('') : '<div class="muted" style="text-align:center;padding:14px;color:#9aa2b1;font-size:12.5px">この日の休暇・欠勤はありません</div>'}</div>` };
+}
+const ST = {}; // per screen: { mode: {gi:'p'|'a'}, closed: {gi:true}, sel: null }
+Object.keys(DATA).forEach(k => ST[k] = { mode: {}, closed: {}, sel: null });
+ST.koutei.mode[0] = true;
+let cur = 'home';
+
+/* ---------- gantt render ---------- */
+function gantt() {
+  const D = DATA[cur], S = ST[cur], W = (D1 - D0 + 1) * CW;
+  const cw = $('gw').clientWidth || 373;
+  let col = '', days = '';
+  const firstOfMonth = d => ym(d)[1] === 1;
+  for (let d = D0; d <= D1; d++) {
+    const w = wd(d), mb = firstOfMonth(d) && d !== D0 ? 'mb' : '';
+    if (CW >= 6) col += `<span class="${[w === '土' || w === '日' ? 'we' : '', d === TODAY ? 'td' : '', mb].join(' ')}" style="width:${CW}px"></span>`;
+    else col += `<span class="${[d === TODAY ? 'td' : '', mb].join(' ')}" style="width:${CW}px;border-right:none"></span>`;
+    let lab = '';
+    if (CW >= 26) lab = `${dd(d)}<small>${w}</small>`;
+    else if (CW >= 10) lab = d === TODAY ? `<b style="color:#d1414a">${dd(d)}</b><small style="color:#d1414a">今日</small>` : w === '月' ? `${md(d)}<small>&nbsp;</small>` : '';
+    else lab = '';
+    days += `<div class="${w === '土' ? 'sat' : w === '日' ? 'sun' : ''} ${d === TODAY && CW >= 26 ? 'td' : ''} ${mb}" style="width:${CW}px;${CW < 26 ? 'overflow:visible;white-space:nowrap;border-right:none;font-size:10.5px' : ''}">${lab}</div>`;
+  }
+  let mh = '';
+  MONTHS.forEach(([m, a, b]) => { const s0 = Math.max(a, D0), e0 = Math.min(b, D1); if (s0 > e0) return; mh += `<div style="width:${(e0 - s0 + 1) * CW - (s0 === a && a !== D0 ? 2 : 0)}px"><span>${CW < 6 ? m + '月' : '2026年' + m + '月'}</span></div>`; });
+  const dayRow = CW < 6 ? `<div class="gdays" style="height:${'18px'}"></div>` : `<div class="gdays">${days}</div>`;
+  let h = `<div class="ginner" style="width:${W}px"><div class="colbg">${col}</div>
+    <div class="ghead"><div class="gmonth">${mh}</div>${dayRow}</div>`;
+  D.groups.forEach((g, gi) => {
+    const showA = true; // 実績は常に表示
+    let badge = '', pa = '';
+    if (D.kind === 'task') {
+      const avg = Math.round(g.rows.reduce((a, r) => a + pctOf(r), 0) / g.rows.length);
+      badge = `<span class="pct" style="${avg < 100 ? 'color:#2f6fed;border-color:#2f6fed' : ''}">${avg}%</span>`;
+      pa = '';
+    } else {
+      badge = `<span class="cnt">${g.rows.length}${D.kind === 'person' ? '名' : '台'}</span>`;
+    }
+    const dot = D.kind === 'person' ? `<span style="width:10px;height:10px;border-radius:50%;background:${SITES[g.n]};flex:none"></span>` : '';
+    h += `<div class="ggroup"><div class="gtitle"><div class="gt" style="width:${cw}px">${dot}<b>${g.n}</b>${badge}${pa}<button class="caret" onclick="toggleG(${gi})">${S.closed[gi] ? '▸' : '▾'}</button></div></div>`;
+    if (!S.closed[gi]) g.rows.forEach((r, ri) => {
+      let bars = '';
+      if (D.kind === 'task') {
+        const p = pctOf(r), x0 = r.ps != null ? Math.max(r.ps, D0) : r.as != null ? Math.max(r.as, D0) : D0;
+        bars = `<div class="tlb" style="left:${X(x0) + 2}px"><span>${r.n}<b class="tp ${p < 100 ? 'ip' : ''}">${p}%</b>${r.ps == null ? '<small style="color:#9aa2b1">予定なし</small>' : ''}</span></div>` +
+          (r.ps != null ? barHTML(gi, ri, 0, r.ps, r.pe, '', '', '', true) : '');
+        if (showA && r.as != null) {
+          const ae = r.ae ?? TODAY;
+          const pe = r.pe ?? 999; bars += actHTML(r.as, Math.min(ae, pe), '') + (ae > pe ? actHTML(pe + 1, ae, 'over') : '');
+        }
+      } else if (D.kind === 'person') {
+        bars = labAbove(r.s, null, r.n) + barHTML(gi, ri, 0, r.s, r.e, '', 'col', SITES[g.n], true);
+      } else {
+        const rs = r.r.slice().sort((p, q) => p[1] - q[1]);
+        bars = rs.map((x, k) => labAbove(x[1], x[2] + 1, `${r.n}：${x[0]}`, true) + barHTML(gi, ri, r.r.indexOf(x), x[1], x[2], '', 'col', SITES[x[0]], true)).join('') ||
+          `<div class="tlb" style="left:2px"><span style="color:#9aa2b1">${r.n}：予約なし（空き）</span></div>`;
+      }
+      const rowTapable = D.kind !== 'res';
+      const isSel = S.sel && S.sel[0] === gi && S.sel[1] === ri;
+      h += `<div class="grow ${D.kind === 'task' ? 'task' : 'lab'} ${rowTapable ? 'tapable' : ''} ${isSel ? 'cur' : ''}" ${rowTapable ? `onclick="pick(${gi},${ri},0)"` : ''}>${bars}</div>`;
+    });
+    h += '</div>';
+  });
+  h += `<div class="gnow" style="left:${X(TODAY) + CW / 2 - 1}px;top:${CW < 6 ? 40 : 52}px"></div></div>`;
+  return h;
+}
+// 名前はすべてバーの上（外）に出す。横スクロールしても画面左に残る（次のバーの手前まで）
+function labAbove(s, next, text, toBarEnd) { // toBarEnd：予約（④）は名前に現場名を含むので、バーが画面外に出たら名前も流す
+  const x0 = X(Math.max(s, D0)) + 2, w = next != null ? `width:${Math.max(0, X(next) - x0 - 4)}px` : 'right:0';
+  return s > D1 || (next != null && next <= D0) ? '' : `<div class="tlb" style="left:${x0}px;${w};${toBarEnd ? '' : 'clip-path:inset(-2px 0)'}"><span>${text}</span></div>`;
+}
+function actHTML(s, e, cls) {
+  const a = Math.max(s, D0), b = Math.min(e, D1);
+  if (a > b) return '';
+  return `<div class="act ${cls}" style="left:${X(a) + 4}px;width:${(b - a + 1) * CW - 8}px"></div>`;
+}
+function barHTML(gi, ri, xi, s, e, label, cls, color, noLabel) {
+  const a = Math.max(s, D0), b = Math.min(e, D1);
+  if (a > b) return '';
+  const S = ST[cur], sel = S.sel && S.sel.join() === [gi, ri, xi].join();
+  const w = (b - a + 1) * CW - 4, narrow = w < 70 && !color;
+  return `<div class="bar ${cls} ${sel ? 'sel' : ''}" style="left:${X(a) + 2}px;width:${w}px;${color ? `background:${color}` : ''}" onclick="event.stopPropagation();pick(${gi},${ri},${xi})">${narrow || noLabel ? '' : `<span class="lb">${label}</span>`}</div>` +
+    (narrow && !noLabel ? `<span class="olb" style="left:${X(a) + w + 6}px">${label}</span>` : '');
+}
+
+/* ---------- detail panel ---------- */
+function detail() {
+  const D = DATA[cur], S = ST[cur];
+  if (cur === 'koutei' && !S.sel) return { cls: 'dp empty', h: '作業のバーを押すと、予定・実績の詳細を表示します' };
+  if (!S.sel) return { cls: 'dp empty', h: D.kind === 'res' ? 'バーを押すと、予約の詳細を表示します' : D.kind === 'person' ? 'バーを押すと、勤務予定の詳細を表示します' : 'タスクを押すと、予定・実績の詳細を表示します' };
+  const [gi, ri, xi] = S.sel, g = D.groups[gi], r = g.rows[ri];
+  const x = `<button class="x" onclick="ST[cur].sel=null;render()">✕</button>`;
+  if (D.kind === 'task') {
+    const act = r.as == null ? '未着手' : `${full(r.as)}〜${r.ae ? full(r.ae) : '（進行中）'}`;
+    return { cls: 'dp', h: `${x}<div class="crumb">${g.n} ›</div><div class="tt"><b>${r.n}</b><span class="pct" style="${pctOf(r) < 100 ? 'color:#2f6fed;border-color:#2f6fed' : ''}">${pctOf(r)}%</span></div>
+      <table><tr><td>予定</td><td>${r.ps == null ? 'なし' : full(r.ps) + '〜' + full(r.pe)}</td></tr><tr><td>実績</td><td>${act}</td></tr></table>
+      ${cur === 'koutei' ? `<div class="acts"><button class="btn-o" onclick="openSheet('task')">作業を編集</button></div>${LAST === 'saved' ? '<div class="ok" style="margin-top:6px">✓ 保存しました</div>' : ''}` : ''}` };
+  }
+  if (D.kind === 'person') {
+    return { cls: 'dp', h: `${x}<div class="crumb">${g.n} ›</div><div class="tt"><b>${r.n}</b></div>
+      <table><tr><td>期間</td><td>${full(r.s)}〜${full(r.e)}</td></tr><tr><td>日数</td><td>${r.e - r.s + 1}日</td></tr></table>
+      <div class="acts"><button class="btn-o" onclick="openSheet('asg')">勤務予定を編集</button></div>` };
+  }
+  const v = r.r[xi];
+  return { cls: 'dp', h: `${x}<div class="crumb">${g.n} › ${r.n} ›</div><div class="tt"><b>${v[0]}</b></div>
+    <table><tr><td>期間</td><td>${full(v[1])}〜${full(v[2])}</td></tr><tr><td>予約者</td><td>${v[3]}</td></tr></table>
+    <div class="acts"><button class="btn-o" onclick="openSheet('res')">予約を編集</button></div>` };
+}
+
+/* ---------- actions ---------- */
+function setMode(gi) { ST[cur].mode[gi] = !ST[cur].mode[gi]; render(true); }
+function toggleG(gi) { ST[cur].closed[gi] = !ST[cur].closed[gi]; render(true); }
+function pick(gi, ri, xi) {
+  ST[cur].sel = [gi, ri, xi];
+  LAST = '';
+  render(true);
+}
+let LAST = '';
+/* ---------- edit sheet (②)：③④と同じ「詳細 → 編集シート」 ---------- */
+const pad = n => String(n).padStart(2, '0');
+const iso = n => { const [m, d] = ym(n); return `2026-${pad(m)}-${pad(d)}`; };
+const fromIso = v => { if (!v) return null; const [, m, d] = v.split('-').map(Number); const M = MONTHS.find(x => x[0] === m); return M ? M[1] + d - 1 : null; };
+const dIn = (id, v, label, max, ph) => `<div class="fld" style="flex:1;min-width:0"><label>${label}</label><input class="inp" type="date" id="${id}" value="${v == null ? '' : iso(v)}" min="${iso(VIEWS.all.d0)}" max="${max}" oninput="taskCheck()">${ph ? `<div class="hint">${ph}</div>` : ''}</div>`;
+function taskSheet() {
+  const [gi] = ST.koutei.sel, g = DATA.koutei.groups[gi], r = selRow();
+  return `<div class="crumb" style="font-size:11.5px;color:#767b87;margin-top:12px">${g.n} ›</div><h3 style="margin-top:2px">${r.n}</h3>
+    <div class="sec-t">予定</div>
+    <div style="display:flex;gap:10px">${dIn('dPs', r.ps, '開始日', iso(VIEWS.all.d1))}${dIn('dPe', r.pe, '終了日', iso(VIEWS.all.d1))}</div>
+    <div class="sec-t" style="display:flex;align-items:center">実績<button class="lnk" onclick="$('dAs').value='';$('dAe').value='';taskCheck()">実績をクリア</button></div>
+    <div class="quick"><button class="btn-o" onclick="$('dAs').value=iso(TODAY);$('dAe').value='';taskCheck()">今日から開始</button><button class="btn-o" onclick="if(!$('dAs').value)$('dAs').value=iso(TODAY);$('dAe').value=iso(TODAY);taskCheck()">今日で完了</button></div>
+    <div style="display:flex;gap:10px">${dIn('dAs', r.as, '開始日', iso(TODAY), '空欄＝未着手')}${dIn('dAe', r.ae, '終了日', iso(TODAY), '空欄＝進行中')}</div>
+    <div class="sec-t">進捗</div>
+    <div class="fld prog-auto"><b id="pgv">${pctOf(r)}%</b><span id="pgf">${pctNote(r)}</span><span class="auto-tag">自動計算</span></div>
+    <div id="tErr" class="t-err"></div>
+    <div style="display:flex;gap:10px"><button class="btn-o" style="flex:1;height:46px" onclick="closeSheet()">キャンセル</button><button class="btn-p" id="tSave" style="flex:2;height:46px" onclick="taskSave()">保存</button></div>`;
+}
+// 進捗は入力しない：実績の日数 ÷ 予定の日数 で自動計算（実績が進行中なら今日まで、上限100%）
+const daysOf = (a, b) => b - a + 1;
+function pctOf(r) { if (r.ps == null || r.as == null || r.as > TODAY) return 0; return Math.min(100, Math.round(daysOf(r.as, r.ae ?? TODAY) / daysOf(r.ps, r.pe) * 100)); }
+function pctNote(r) { return r.ps == null ? '予定がないため 0%' : r.as == null ? '未着手のため 0%' : `実績 ${daysOf(r.as, r.ae ?? TODAY)}日 ÷ 予定 ${daysOf(r.ps, r.pe)}日`; }
+function taskVals() { return { ps: fromIso($('dPs').value), pe: fromIso($('dPe').value), as: fromIso($('dAs').value), ae: fromIso($('dAe').value) }; }
+function taskCheck() {
+  const v = taskVals(); let e = '';
+  if ((v.ps == null) !== (v.pe == null)) e = '予定は開始日と終了日の両方を入力してください';
+  else if (v.ps != null && v.pe < v.ps) e = '予定の終了日は開始日以降にしてください';
+  else if (v.as == null && v.ae != null) e = '実績の開始日を入力してください';
+  else if (v.as != null && v.ae != null && v.ae < v.as) e = '実績の終了日は開始日以降にしてください';
+  else if ((v.as ?? 0) > TODAY || (v.ae ?? 0) > TODAY) e = '実績に今日より先の日付は入力できません';
+  if (!e) { $('pgv').textContent = pctOf(v) + '%'; $('pgf').textContent = pctNote(v); }
+  $('tErr').textContent = e; $('tSave').disabled = !!e; $('tSave').style.opacity = e ? .4 : 1;
+  return !e;
+}
+function taskSave() {
+  if (!taskCheck()) return;
+  Object.assign(selRow(), taskVals());
+  closeSheet(); LAST = 'saved'; render(true);
+}
+function scrollToday() { $('gw').scrollTo({ left: X(TODAY) - (cur === 'koutei' ? $('gw').clientWidth / 2 : CW), behavior: 'smooth' }); }
+const SHEETS = {
+  leave: () => `<h3>休暇・欠勤を登録</h3>
+    <div class="fld"><label>対象社員</label><select class="inp"><option>自分（BORITH USER）</option></select></div>
+    <div class="fld"><label>休暇区分</label><div style="display:flex;gap:8px"><button class="btn-o" style="flex:1;height:42px;border-color:#e0a83c;font-weight:700">有給休暇</button><button class="btn-o" style="flex:1;height:42px">欠勤</button></div></div>
+    <div class="fld"><label>取得日</label><div class="inp" style="display:flex;align-items:center;font-weight:700">${full(CALDAY)}</div><div style="font-size:11px;color:#767b87;margin-top:4px">カレンダーで選んだ日が入った状態で開きます</div></div>
+    <div style="display:flex;gap:10px"><button class="btn-o" style="flex:1;height:46px" onclick="closeSheet()">キャンセル</button><button class="btn-p" style="flex:2;height:46px" onclick="closeSheet()">登録</button></div>`,
+  task: taskSheet,
+  asg: () => `<h3>勤務予定</h3><div class="fld"><label>社員</label><select class="inp"><option>Borith 現場監督</option></select></div><div class="fld"><label>現場</label><select class="inp"><option>現場を選択してください</option></select></div><div style="display:flex;gap:10px"><div class="fld" style="flex:1"><label>開始日</label><input class="inp" value="2026/09/30"></div><div class="fld" style="flex:1"><label>終了日</label><input class="inp" value="2026/10/15"></div></div><div style="display:flex;gap:10px"><button class="btn-o" style="flex:1;height:46px" onclick="closeSheet()">キャンセル</button><button class="btn-p" style="flex:2;height:46px" onclick="closeSheet()">保存</button></div>`,
+  res: () => `<h3>予約</h3><div class="fld"><label>重機・車両</label><select class="inp"><option>選択してください</option></select></div><div class="fld"><label>現場</label><select class="inp"><option>現場を選択してください</option></select></div><div style="display:flex;gap:10px"><div class="fld" style="flex:1"><label>開始日</label><input class="inp" value="2026/09/30"></div><div class="fld" style="flex:1"><label>終了日</label><input class="inp" value="2026/09/30"></div></div><div style="display:flex;gap:10px"><button class="btn-o" style="flex:1;height:46px" onclick="closeSheet()">キャンセル</button><button class="btn-p" style="flex:2;height:46px" onclick="closeSheet()">保存</button></div>`,
+};
+function selRow() { const [gi, ri] = ST.koutei.sel; return DATA.koutei.groups[gi].rows[ri]; }
+function openSheet(k) { $('sheet').innerHTML = `<div style="width:40px;height:4px;border-radius:2px;background:#d8dbe2;margin:0 auto"></div>` + SHEETS[k](); $('sheet').classList.add('show'); $('bd').classList.add('show'); }
+function closeSheet() { $('sheet').classList.remove('show'); $('bd').classList.remove('show'); }
+
+/* ---------- notes ---------- */
+const COMMON = `<div class="common"><h4>4画面共通（パターン2）<span class="en">Common to all four (Pattern 2)</span></h4><ul>
+  <li>カレンダー形式は継続し、日付の見出し（年月・日・曜日）は上に固定<span class="en">Calendar kept; date header (month/day/weekday) fixed at top</span></li>
+  <li>グループ名は各ガントの上に1行で表示し、横スクロールしても左に固定<span class="en">Group title sits above each gantt and stays fixed while scrolling sideways</span></li>
+  <li>名前はすべてバーの上（外）に表示し、バーには文字を入れない（①〜④で統一）。バーの左端が画面外に出ても、名前は画面の左に残る（見切れ対策）<span class="en">Names always sit above the bar, never inside (unified across ①–④); it stays visible at the left edge even when the bar start scrolls off-screen</span></li>
+  <li>バー、または同じ行の空いている所を押すと詳細を表示（③④も同様。④は1行に複数の予約があるためバーのみ）。✕ で閉じる<span class="en">Tap a bar to show details at the bottom; ✕ closes</span></li>
+  <li>▾ でグループを開閉。今日の列は赤で強調し、開いたときは今日の位置から表示<span class="en">▾ collapses a group; today is highlighted and the view opens at today</span></li>
+</ul></div>`;
+const NOTES = {
+  cal: () =>
+    N(1, '日付のマスには、名前ではなく点（全休＝緑・半休＝黄）と人数だけを表示する。PC のように「全 山田太郎」と文字を入れると、スマホでは名前が切れて読めないため。', 'Day cells show only dots (green = full day, yellow = half day) and a headcount; text like 「全 山田太郎」 gets cut off on a phone.') +
+    N(2, '日付を押すと、その日の休暇・欠勤者を下のパネルに一覧で表示する（押して確認できます）。', 'Tapping a date lists that day\'s people in the bottom panel (try it).') +
+    N(3, 'パネル右上の `＋ この日に登録` で、選んだ日が入った状態の登録シートを開く（No.16 の「日付から登録」をスマホでも使える形に）。', '＋ この日に登録 opens the registration sheet with that date preselected (No.16 on mobile).') +
+    N(4, '月の切替は `‹ ›` に加えて、年月を押すと年月ピッカーを開く（No.15）。', 'Besides ‹ ›, tapping the month opens the year-month picker (No.15).'),
+  home: () =>
+    N(1, 'グループ＝現場。現場名の右に、現場の進捗（作業の平均 %）と開閉 ▾ を置く。`実績` ボタンは削除。', 'Groups are sites; next to the name: average progress and ▾. The 実績 button is removed.') +
+    N(2, '実績は常に表示する。予定のバー（グレー）の<b>すぐ下</b>に実績の線（青）を引き、進行中の作業は今日まで伸ばす。', 'Actuals are always shown: a blue line directly under the grey plan bar, extending to today for in-progress tasks.') +
+    N(3, '実績が予定の終了日を過ぎている部分は、線を赤にする（予定超過）。', 'Where the actual runs past the planned end, the line turns red (overrun).') +
+    N(4, '1行＝1作業。<b>作業名と進捗（%）はバーの上</b>に表示し、その下に予定のバー（文字なし）、さらに下に実績の線を並べる（②も同じ）。進捗は100%で緑、それ未満は青。', 'One row per task: <b>task name and progress % above the bar</b>, then the plain plan bar, then the actual line below (same on ②). Progress is green at 100%, blue below.'),
+  koutei: () =>
+    I('<b>表示単位：</b>右上の `全体`／`月`／`週` で表示単位を切り替える（PC と同じ3つ）。<b>週</b>：1画面に7日（曜日まで表示）。<b>月</b>：1画面に約1か月（日付は月曜と今日だけ表示）。<b>全体</b>：工期全体（9/1〜12/20）を1画面に収め、横スクロールなし（月の見出しのみ）。', 'Switch the view unit with 全体 / 月 / 週 (same three as PC). Week: 7 days per screen with weekdays. Month: ~1 month per screen. All: the whole term fits one screen.') +
+    I('<b>実績の表示：</b>`実績` ボタンは削除し、実績の線は常に表示する（①と同じ）。予定を過ぎた部分は赤。', '<b>Actual display:</b> no 実績 button; actual lines are always shown (same as ①); overrun is red.') +
+    N(1, '作業のバー、または同じ行の空いている所を押すと、<b>③④と同じく画面下のパネルに詳細</b>（予定・実績・進捗）を表示する。✕ で閉じる。', 'Tapping a task bar or its row shows details (plan, actual, progress) in the bottom panel — same as ③④. ✕ closes.') +
+    N(2, 'パネルの `作業を編集` を押すと、下からシートが開く。<b>予定・実績の開始日／終了日はスマホの日付ピッカーで入力</b>する（1枚のシートで完結）。<b>進捗は入力できない</b>：予定に対する実績から自動で算出して表示する（実績の日数 ÷ 予定の日数。実績が進行中なら今日までで計算、上限100%）。日付を変えるとシート内の進捗もその場で変わる。', '作業を編集 opens a bottom sheet: plan/actual start and end via the phone date picker, all in one sheet. <b>Progress is not editable</b>: it is calculated from the actual against the plan (actual days ÷ planned days; in-progress counts up to today; max 100%) and updates live as dates change.') +
+    N(3, '実績には `今日から開始`（開始日＝今日・終了日は空欄＝進行中）と `今日で完了`（終了日＝今日）のボタンを置く。現場で一番多い操作を1タップにする。`実績をクリア` で未着手に戻す。', 'Quick buttons: 今日から開始 (start today, in progress) and 今日で完了 (end today). 実績をクリア resets to not started.') +
+    N(4, '入力の誤りはシート内に赤字で表示し、`保存` を押せなくする（終了日が開始日より前／予定の片方だけ入力／実績に今日より先の日付）。保存するとガントにすぐ反映され、パネルに「✓ 保存しました」を表示する。', 'Errors show in red and disable 保存 (end before start, only one plan date, future actual). Saving updates the gantt immediately.') +
+    I('<b>PC のみ：</b>バーのドラッグでの期間変更・1行に複数バーの追加。スマホはガントを「見る」画面とし、編集はシートに統一する。', '<b>PC only:</b> dragging bars and adding multiple bars per row. On mobile the gantt is for viewing; editing goes through the sheet.'),
+  assign: () =>
+    N(1, 'グループ＝現場（現場の色の丸を付ける）。現場名の右に配置人数と開閉 ▾。予定／実績の区別はないので `実績` ボタンは置かない。', 'Groups are sites (with site color dot); headcount and ▾ on the right. No 実績 button, since there is no plan/actual distinction.') +
+    N(2, '1行＝1人。社員名はバーの上に表示し、バーは現場の色で塗る（文字なし）。同じ人が複数の現場に配属されている場合は、それぞれの現場のグループに出る。', 'One row per person; name above the bar, bar colored by site (no text). A person assigned to several sites appears in each site group.') +
+    N(3, 'バーを押すと詳細に期間・日数と `勤務予定を編集` ボタンを表示。', 'Tapping shows period, days and 勤務予定を編集.') +
+    I('<b>PC のみ：</b>ガント上のドラッグでの予定作成・期間変更。スマホは `＋ 追加` と詳細の `編集` で入力する。', '<b>PC only:</b> drag-creating / resizing on the gantt; on mobile use ＋ 追加 and 編集.'),
+  res: () =>
+    N(1, 'グループ＝区分（`重機`／`車両`）。区分の右に台数と開閉 ▾。', 'Groups are categories (重機 / 車両) with count and ▾.') +
+    N(2, '1行＝1台。各予約バーの上に「重機名：予約先の現場」を表示し、バーは現場の色で塗る（文字なし）。予約のない重機は「予約なし（空き）」と表示する。', 'One row per unit; "name: site" sits above each booking bar, colored by site (no text). Units with no booking show 予約なし（空き）.') +
+    N(3, 'バーを押すと詳細に期間と予約者（No.41）、`予約を編集` ボタンを表示。', 'Tapping shows period, reserver (No.41) and 予約を編集.') +
+    I('<b>PC のみ：</b>予約バーのドラッグでの期間変更。', '<b>PC only:</b> drag-changing reservation periods.'),
+};
+
+/* ---------- render ---------- */
+const TABS = [['home', '① ホーム：所属現場の工程表', 'Home: my sites\' schedule'], ['koutei', '② 現場詳細：工程表', 'Site detail: schedule'], ['assign', '③ 配属現場一覧：勤務予定', 'Assignments'], ['res', '④ 重機・点検一覧：予約', 'Equipment reservations'], ['cal', '⑤ 出退勤一覧：休暇・欠勤カレンダー', 'Attendance: leave calendar']];
+function render(keep) {
+  const D = DATA[cur];
+  $('tabs').innerHTML = TABS.map(([k, l, e]) => `<button class="tab-btn ${k === cur ? 'active' : ''}" onclick="cur='${k}';closeSheet();render()">${l}<span class="en">${e}</span></button>`).join('');
+  $('pTitle').textContent = D.title;
+  if (D.kind === 'cal') {
+    $('pHead').innerHTML = D.head();
+    const gw0 = $('gw'), st0 = gw0.scrollTop; gw0.innerHTML = calHTML(); gw0.scrollLeft = 0; if (keep) gw0.scrollTop = st0;
+    const d0 = calDetail(); $('dp').className = d0.cls; $('dp').innerHTML = d0.h;
+    $('notes').innerHTML = (`<h3>出退勤一覧：休暇・欠勤カレンダー<span class="en">Attendance: leave calendar</span></h3><p class="lead">月カレンダー（7列）なのでパターン2（ガント）は当てはめず、カレンダーのまま見やすくします。<span class="en">As a 7-column month calendar, Pattern 2 (gantt) does not apply; the calendar is kept and made readable.</span></p>` + NOTES.cal()).replace(/`([^`<]+)`/g, '<code class="k">$1</code>');
+    return;
+  }
+  $('pHead').innerHTML = D.head() + `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><div class="legend" style="margin:0">${D.kind === 'task' ? '<span><i style="background:#dcdcdc"></i>予定</span><span><i style="background:#2f6fed;height:4px;vertical-align:2px"></i>実績</span><span><i style="background:#d1414a;height:4px;vertical-align:2px"></i>予定超過</span>' : Object.entries(SITES).map(([n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join('')}</div><button class="btn-o today-btn" onclick="scrollToday()">今日</button></div>`;
+  setScale();
+  const gw = $('gw'), sl = gw.scrollLeft, stp = gw.scrollTop;
+  gw.innerHTML = gantt();
+  if (keep) { gw.scrollLeft = sl; gw.scrollTop = stp; } else { gw.scrollLeft = cur === 'koutei' ? (VIEW === 'week' ? X(TODAY) - CW * 3 : VIEW === 'month' ? X(TODAY) - gw.clientWidth / 2 : 0) : X(TODAY) - CW; gw.scrollTop = 0; }
+  const d = detail(); $('dp').className = d.cls; $('dp').innerHTML = d.h;
+  const t = TABS.find(x => x[0] === cur);
+  $('notes').innerHTML = (`<h3>${t[1].slice(2)}<span class="en">${t[2]}</span></h3><p class="lead">番号は、この画面での当てはめ方です。<span class="en">Numbers show how Pattern 2 is applied here.</span></p>` + NOTES[cur]() + COMMON).replace(/`([^`<]+)`/g, '<code class="k">$1</code>');
+}
+render();
+</script>
+</body>
+</html>
