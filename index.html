@@ -2,29 +2,28 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ガント スマホ版 パターン2 Mock</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>工程表・勤務予定 スマホ版 デモ</title>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif; background: #f0efe9; color: #1f2430; }
-  .mock-shell { max-width: 1400px; margin: 0 auto; padding: 24px 16px; }
-  .mock-title { font-size: 20px; font-weight: 700; }
+  html, body { height: 100%; }
   .en { display: block; font-size: 11.5px; font-weight: 400; color: #9AA2B1; margin-top: 2px; }
-  .mock-sub { font-size: 12.5px; color: #767b87; margin: 6px 0 14px; }
-  .mock-sub .en { font-size: 11px; }
-  .tabs { display: flex; gap: 4px; margin: 0 0 20px; border-bottom: 1px solid #e2e0d9; flex-wrap: wrap; }
-  .tab-btn { padding: 10px 14px; font-size: 13.5px; font-weight: 600; color: #8a8f9c; background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; text-align: left; font-family: inherit; }
-  .tab-btn .en { font-size: 10.5px; color: #b4b9c4; }
-  .tab-btn.active { color: #1f2430; border-bottom-color: #2b3350; }
-  .stage { display: flex; gap: 26px; align-items: flex-start; flex-wrap: wrap; }
-  .notes { flex: 1; min-width: 320px; }
+  .stage { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px 12px; }
 
   /* phone */
   .phone { user-select: none; -webkit-user-select: none; width: 393px; height: 800px; background: #fff; border: 10px solid #1f2430; border-radius: 40px; overflow: hidden; position: relative; flex: none; box-shadow: 0 10px 30px rgba(31,36,48,.18); }
   .p-top { height: 54px; background: #fff; border-bottom: 1px solid #eef0f4; display: flex; align-items: center; padding: 0 12px 0 8px; gap: 6px; }
   .p-top .m { width: 36px; font-size: 18px; text-align: center; }
   .p-title { flex: 1; font-size: 15px; font-weight: 700; }
-  .furi { border: 1px solid #d8dbe2; border-radius: 6px; padding: 5px 8px; font-size: 11px; }
+  .furi { border: 1px solid #d8dbe2; border-radius: 6px; padding: 5px 8px; font-size: 11px; flex: none; white-space: nowrap; }
+  .p-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sw { position: relative; flex: none; }
+  .sw select { -webkit-appearance: none; appearance: none; font-family: inherit; max-width: 108px; width: 108px; height: 28px; padding: 0 20px 0 8px; border: 1px solid #c7ccd6; border-radius: 6px; background: #f7f7f4; color: #1f2430; font-size: 11.5px; font-weight: 600; line-height: 28px; text-overflow: ellipsis; cursor: pointer; }
+  .sw::after { content: "\25BE"; position: absolute; right: 7px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #767b87; pointer-events: none; }
+  .sw select:focus { outline: 2px solid #2b3350; outline-offset: 1px; }
   .p-body { position: absolute; top: 54px; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column; background: #fff; }
   .p-head { padding: 12px 14px 10px; border-bottom: 1px solid #eef0f4; flex: none; }
   .p-head h1 { margin: 0; font-size: 17px; }
@@ -218,42 +217,33 @@
   .fld label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 5px; color: #3a4050; }
   .inp { width: 100%; height: 44px; border: 1px solid #d8dbe2; border-radius: 8px; padding: 0 12px; font-size: 14px; font-family: inherit; background: #fff; }
 
-  /* notes */
-  .notes h3 { margin: 0 0 4px; font-size: 16px; }
-  .notes h3 .en { font-size: 11.5px; }
-  .notes .lead { font-size: 12.5px; color: #5d6472; margin: 8px 0 12px; line-height: 1.6; }
-  .notes .lead .en { font-size: 11px; }
-  .change-note { background: #fff4f4; border: 1px solid #f3c9cc; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: #8a2a2f; margin-bottom: 8px; line-height: 1.55; }
-  .change-note .en { font-size: 11px; color: #b06a6d; }
-  .note-num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #d1414a; color: #fff; font-size: 10.5px; font-weight: 700; margin-right: 6px; vertical-align: 1px; }
-  .info-note { background: #fff; border: 1px solid #e6e4dd; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: #4a4f5b; margin-bottom: 8px; line-height: 1.55; }
-  .info-note .en { font-size: 11px; }
-  .common { background: #fff; border: 1px solid #e6e4dd; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; }
-  .common h4 { margin: 0 0 6px; font-size: 13px; }
-  .common h4 .en { font-size: 11px; }
-  .common ul { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.75; }
-  .common li .en { display: inline; font-size: 10.5px; margin-left: 4px; }
-  code.k { background: #f2f2ee; border: 1px solid #e6e4dd; border-radius: 4px; padding: 1px 5px; font-size: 11.5px; }
+
+  /* on a phone: the mock frame gets out of the way and the screen fills the viewport */
+  @media (max-width: 520px) {
+    body { background: #fff; overflow: hidden; }
+    .stage { padding: 0; align-items: stretch; }
+    .phone { width: 100vw; height: 100vh; height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
+    .p-top { padding-top: env(safe-area-inset-top, 0px); height: calc(54px + env(safe-area-inset-top, 0px)); }
+    .p-body { top: calc(54px + env(safe-area-inset-top, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  }
 </style>
 </head>
 <body>
-<div class="mock-shell">
-  <div class="mock-title">カレンダー・ガント画面 スマホ版：パターン2（①〜④）＋休暇・欠勤カレンダー（⑤）<span class="en">Calendar / gantt screens on mobile — Pattern 2 (① to ④) + leave calendar (⑤)</span></div>
-  <p class="mock-sub">添付のパターン2（カレンダー形式を継続・グループ見出しを各ガントの上・タスク名はバー内・横スクロールで見出し固定・タップで詳細）を①〜④に当てはめました。⑤の休暇・欠勤カレンダーは月カレンダーのまま見やすくしています。バーや日付を押すと下に詳細が出ます。
-    <span class="en">Pattern 2 from the attachment (keep the calendar, group title above each gantt, task name inside the bar, horizontal scroll with fixed titles, tap for details) applied to ① to ④; ⑤ keeps the month calendar, made readable. Tap a bar or date for details below.</span></p>
-  <div class="tabs" id="tabs"></div>
-  <div class="stage">
-    <div class="phone" id="phone">
-      <div class="p-top"><span class="m">☰</span><span class="p-title" id="pTitle"></span><span class="furi">ふりがな</span></div>
-      <div class="p-body">
-        <div class="p-head" id="pHead"></div>
-        <div class="gwrap" id="gw"></div>
-        <div class="dp" id="dp"></div>
-      </div>
-      <div class="backdrop" id="bd" onclick="closeSheet()"></div>
-      <div class="sheet" id="sheet"></div>
+<div class="stage">
+  <div class="phone" id="phone">
+    <div class="p-top">
+      <span class="m">☰</span>
+      <span class="p-title" id="pTitle"></span>
+      <span class="sw"><select id="screenSel" aria-label="画面を切り替える" onchange="switchScreen(this.value)"></select></span>
+      <span class="furi">ふりがな</span>
     </div>
-    <div class="notes" id="notes"></div>
+    <div class="p-body">
+      <div class="p-head" id="pHead"></div>
+      <div class="gwrap" id="gw"></div>
+      <div class="dp" id="dp"></div>
+    </div>
+    <div class="backdrop" id="bd" onclick="closeSheet()"></div>
+    <div class="sheet" id="sheet"></div>
   </div>
 </div>
 
@@ -276,8 +266,6 @@ function setScale() {
   else { D0 = 21; D1 = 61; CW = 34; }
 }
 const SITES = { 'BORITH 現場': '#3b82f6', 'スクラッチ現場B': '#e8479a', '田中 太郎GENBA': '#10b981', '本社': '#64748b' };
-const N = (n, ja, en) => `<div class="change-note"><span class="note-num">${n}</span>${ja}<span class="en">${en}</span></div>`;
-const I = (ja, en) => `<div class="info-note">${ja}<span class="en">${en}</span></div>`;
 
 /* ---------- data per screen ---------- */
 // task: { n, ps, pe, as, ae, pct }
@@ -499,56 +487,20 @@ function selRow() { const [gi, ri] = ST.koutei.sel; return DATA.koutei.groups[gi
 function openSheet(k) { $('sheet').innerHTML = `<div style="width:40px;height:4px;border-radius:2px;background:#d8dbe2;margin:0 auto"></div>` + SHEETS[k](); $('sheet').classList.add('show'); $('bd').classList.add('show'); }
 function closeSheet() { $('sheet').classList.remove('show'); $('bd').classList.remove('show'); }
 
-/* ---------- notes ---------- */
-const COMMON = `<div class="common"><h4>4画面共通（パターン2）<span class="en">Common to all four (Pattern 2)</span></h4><ul>
-  <li>カレンダー形式は継続し、日付の見出し（年月・日・曜日）は上に固定<span class="en">Calendar kept; date header (month/day/weekday) fixed at top</span></li>
-  <li>グループ名は各ガントの上に1行で表示し、横スクロールしても左に固定<span class="en">Group title sits above each gantt and stays fixed while scrolling sideways</span></li>
-  <li>名前はすべてバーの上（外）に表示し、バーには文字を入れない（①〜④で統一）。バーの左端が画面外に出ても、名前は画面の左に残る（見切れ対策）<span class="en">Names always sit above the bar, never inside (unified across ①–④); it stays visible at the left edge even when the bar start scrolls off-screen</span></li>
-  <li>バー、または同じ行の空いている所を押すと詳細を表示（③④も同様。④は1行に複数の予約があるためバーのみ）。✕ で閉じる<span class="en">Tap a bar to show details at the bottom; ✕ closes</span></li>
-  <li>▾ でグループを開閉。今日の列は赤で強調し、開いたときは今日の位置から表示<span class="en">▾ collapses a group; today is highlighted and the view opens at today</span></li>
-</ul></div>`;
-const NOTES = {
-  cal: () =>
-    N(1, '日付のマスには、名前ではなく点（全休＝緑・半休＝黄）と人数だけを表示する。PC のように「全 山田太郎」と文字を入れると、スマホでは名前が切れて読めないため。', 'Day cells show only dots (green = full day, yellow = half day) and a headcount; text like 「全 山田太郎」 gets cut off on a phone.') +
-    N(2, '日付を押すと、その日の休暇・欠勤者を下のパネルに一覧で表示する（押して確認できます）。', 'Tapping a date lists that day\'s people in the bottom panel (try it).') +
-    N(3, 'パネル右上の `＋ この日に登録` で、選んだ日が入った状態の登録シートを開く（No.16 の「日付から登録」をスマホでも使える形に）。', '＋ この日に登録 opens the registration sheet with that date preselected (No.16 on mobile).') +
-    N(4, '月の切替は `‹ ›` に加えて、年月を押すと年月ピッカーを開く（No.15）。', 'Besides ‹ ›, tapping the month opens the year-month picker (No.15).'),
-  home: () =>
-    N(1, 'グループ＝現場。現場名の右に、現場の進捗（作業の平均 %）と開閉 ▾ を置く。`実績` ボタンは削除。', 'Groups are sites; next to the name: average progress and ▾. The 実績 button is removed.') +
-    N(2, '実績は常に表示する。予定のバー（グレー）の<b>すぐ下</b>に実績の線（青）を引き、進行中の作業は今日まで伸ばす。', 'Actuals are always shown: a blue line directly under the grey plan bar, extending to today for in-progress tasks.') +
-    N(3, '実績が予定の終了日を過ぎている部分は、線を赤にする（予定超過）。', 'Where the actual runs past the planned end, the line turns red (overrun).') +
-    N(4, '1行＝1作業。<b>作業名と進捗（%）はバーの上</b>に表示し、その下に予定のバー（文字なし）、さらに下に実績の線を並べる（②も同じ）。進捗は100%で緑、それ未満は青。', 'One row per task: <b>task name and progress % above the bar</b>, then the plain plan bar, then the actual line below (same on ②). Progress is green at 100%, blue below.'),
-  koutei: () =>
-    I('<b>表示単位：</b>右上の `全体`／`月`／`週` で表示単位を切り替える（PC と同じ3つ）。<b>週</b>：1画面に7日（曜日まで表示）。<b>月</b>：1画面に約1か月（日付は月曜と今日だけ表示）。<b>全体</b>：工期全体（9/1〜12/20）を1画面に収め、横スクロールなし（月の見出しのみ）。', 'Switch the view unit with 全体 / 月 / 週 (same three as PC). Week: 7 days per screen with weekdays. Month: ~1 month per screen. All: the whole term fits one screen.') +
-    I('<b>実績の表示：</b>`実績` ボタンは削除し、実績の線は常に表示する（①と同じ）。予定を過ぎた部分は赤。', '<b>Actual display:</b> no 実績 button; actual lines are always shown (same as ①); overrun is red.') +
-    N(1, '作業のバー、または同じ行の空いている所を押すと、<b>③④と同じく画面下のパネルに詳細</b>（予定・実績・進捗）を表示する。✕ で閉じる。', 'Tapping a task bar or its row shows details (plan, actual, progress) in the bottom panel — same as ③④. ✕ closes.') +
-    N(2, 'パネルの `作業を編集` を押すと、下からシートが開く。<b>予定・実績の開始日／終了日はスマホの日付ピッカーで入力</b>する（1枚のシートで完結）。<b>進捗は入力できない</b>：予定に対する実績から自動で算出して表示する（実績の日数 ÷ 予定の日数。実績が進行中なら今日までで計算、上限100%）。日付を変えるとシート内の進捗もその場で変わる。', '作業を編集 opens a bottom sheet: plan/actual start and end via the phone date picker, all in one sheet. <b>Progress is not editable</b>: it is calculated from the actual against the plan (actual days ÷ planned days; in-progress counts up to today; max 100%) and updates live as dates change.') +
-    N(3, '実績には `今日から開始`（開始日＝今日・終了日は空欄＝進行中）と `今日で完了`（終了日＝今日）のボタンを置く。現場で一番多い操作を1タップにする。`実績をクリア` で未着手に戻す。', 'Quick buttons: 今日から開始 (start today, in progress) and 今日で完了 (end today). 実績をクリア resets to not started.') +
-    N(4, '入力の誤りはシート内に赤字で表示し、`保存` を押せなくする（終了日が開始日より前／予定の片方だけ入力／実績に今日より先の日付）。保存するとガントにすぐ反映され、パネルに「✓ 保存しました」を表示する。', 'Errors show in red and disable 保存 (end before start, only one plan date, future actual). Saving updates the gantt immediately.') +
-    I('<b>PC のみ：</b>バーのドラッグでの期間変更・1行に複数バーの追加。スマホはガントを「見る」画面とし、編集はシートに統一する。', '<b>PC only:</b> dragging bars and adding multiple bars per row. On mobile the gantt is for viewing; editing goes through the sheet.'),
-  assign: () =>
-    N(1, 'グループ＝現場（現場の色の丸を付ける）。現場名の右に配置人数と開閉 ▾。予定／実績の区別はないので `実績` ボタンは置かない。', 'Groups are sites (with site color dot); headcount and ▾ on the right. No 実績 button, since there is no plan/actual distinction.') +
-    N(2, '1行＝1人。社員名はバーの上に表示し、バーは現場の色で塗る（文字なし）。同じ人が複数の現場に配属されている場合は、それぞれの現場のグループに出る。', 'One row per person; name above the bar, bar colored by site (no text). A person assigned to several sites appears in each site group.') +
-    N(3, 'バーを押すと詳細に期間・日数と `勤務予定を編集` ボタンを表示。', 'Tapping shows period, days and 勤務予定を編集.') +
-    I('<b>PC のみ：</b>ガント上のドラッグでの予定作成・期間変更。スマホは `＋ 追加` と詳細の `編集` で入力する。', '<b>PC only:</b> drag-creating / resizing on the gantt; on mobile use ＋ 追加 and 編集.'),
-  res: () =>
-    N(1, 'グループ＝区分（`重機`／`車両`）。区分の右に台数と開閉 ▾。', 'Groups are categories (重機 / 車両) with count and ▾.') +
-    N(2, '1行＝1台。各予約バーの上に「重機名：予約先の現場」を表示し、バーは現場の色で塗る（文字なし）。予約のない重機は「予約なし（空き）」と表示する。', 'One row per unit; "name: site" sits above each booking bar, colored by site (no text). Units with no booking show 予約なし（空き）.') +
-    N(3, 'バーを押すと詳細に期間と予約者（No.41）、`予約を編集` ボタンを表示。', 'Tapping shows period, reserver (No.41) and 予約を編集.') +
-    I('<b>PC のみ：</b>予約バーのドラッグでの期間変更。', '<b>PC only:</b> drag-changing reservation periods.'),
-};
 
 /* ---------- render ---------- */
-const TABS = [['home', '① ホーム：所属現場の工程表', 'Home: my sites\' schedule'], ['koutei', '② 現場詳細：工程表', 'Site detail: schedule'], ['assign', '③ 配属現場一覧：勤務予定', 'Assignments'], ['res', '④ 重機・点検一覧：予約', 'Equipment reservations'], ['cal', '⑤ 出退勤一覧：休暇・欠勤カレンダー', 'Attendance: leave calendar']];
+const SCREENS = [['home', '① ホーム'], ['koutei', '② 現場詳細'], ['assign', '③ 配属現場'], ['res', '④ 重機・点検'], ['cal', '⑤ 休暇・欠勤']];
+$('screenSel').innerHTML = SCREENS.map(([k, l]) => `<option value="${k}">${l}</option>`).join('');
+function switchScreen(k) { cur = k; closeSheet(); location.hash = k; render(); }
+window.addEventListener('hashchange', () => { const k = location.hash.slice(1); if (DATA[k] && k !== cur) { cur = k; closeSheet(); render(); } });
 function render(keep) {
   const D = DATA[cur];
-  $('tabs').innerHTML = TABS.map(([k, l, e]) => `<button class="tab-btn ${k === cur ? 'active' : ''}" onclick="cur='${k}';closeSheet();render()">${l}<span class="en">${e}</span></button>`).join('');
+  $('screenSel').value = cur;
   $('pTitle').textContent = D.title;
   if (D.kind === 'cal') {
     $('pHead').innerHTML = D.head();
     const gw0 = $('gw'), st0 = gw0.scrollTop; gw0.innerHTML = calHTML(); gw0.scrollLeft = 0; if (keep) gw0.scrollTop = st0;
     const d0 = calDetail(); $('dp').className = d0.cls; $('dp').innerHTML = d0.h;
-    $('notes').innerHTML = (`<h3>出退勤一覧：休暇・欠勤カレンダー<span class="en">Attendance: leave calendar</span></h3><p class="lead">月カレンダー（7列）なのでパターン2（ガント）は当てはめず、カレンダーのまま見やすくします。<span class="en">As a 7-column month calendar, Pattern 2 (gantt) does not apply; the calendar is kept and made readable.</span></p>` + NOTES.cal()).replace(/`([^`<]+)`/g, '<code class="k">$1</code>');
     return;
   }
   $('pHead').innerHTML = D.head() + `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><div class="legend" style="margin:0">${D.kind === 'task' ? '<span><i style="background:#dcdcdc"></i>予定</span><span><i style="background:#2f6fed;height:4px;vertical-align:2px"></i>実績</span><span><i style="background:#d1414a;height:4px;vertical-align:2px"></i>予定超過</span>' : Object.entries(SITES).map(([n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join('')}</div><button class="btn-o today-btn" onclick="scrollToday()">今日</button></div>`;
@@ -557,9 +509,8 @@ function render(keep) {
   gw.innerHTML = gantt();
   if (keep) { gw.scrollLeft = sl; gw.scrollTop = stp; } else { gw.scrollLeft = cur === 'koutei' ? (VIEW === 'week' ? X(TODAY) - CW * 3 : VIEW === 'month' ? X(TODAY) - gw.clientWidth / 2 : 0) : X(TODAY) - CW; gw.scrollTop = 0; }
   const d = detail(); $('dp').className = d.cls; $('dp').innerHTML = d.h;
-  const t = TABS.find(x => x[0] === cur);
-  $('notes').innerHTML = (`<h3>${t[1].slice(2)}<span class="en">${t[2]}</span></h3><p class="lead">番号は、この画面での当てはめ方です。<span class="en">Numbers show how Pattern 2 is applied here.</span></p>` + NOTES[cur]() + COMMON).replace(/`([^`<]+)`/g, '<code class="k">$1</code>');
 }
+if (DATA[location.hash.slice(1)]) cur = location.hash.slice(1);
 render();
 </script>
 </body>
